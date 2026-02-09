@@ -278,6 +278,18 @@ def generate_ai_brief(lluvia_df: pd.DataFrame, river_df: pd.DataFrame, reportes_
         return f"No se pudo obtener resumen IA: {e}"
 
 
+def _coerce_reports_for_ui(df: pd.DataFrame) -> pd.DataFrame:
+    """Asegura tipos compatibles con st.data_editor (evita que columnas queden como float)."""
+    if df.empty:
+        return df
+    out = df.copy()
+    out["fecha"] = pd.to_datetime(out["fecha"], errors="coerce")
+    for col in ["barrio", "barrio_canon", "alerta", "descripcion", "telefono"]:
+        if col in out.columns:
+            out[col] = out[col].astype("string").fillna("")
+    return out
+
+
 # ===== UI =====
 st_autorefresh(interval=REFRESH_MIN * 60 * 1000, key="auto_refresh")
 
@@ -396,10 +408,13 @@ with tab_reportes:
                 st.warning("Indica el barrio/vereda.")
             else:
                 append_user_update(barrio, alerta, descripcion, telefono)
-                st.success("Reporte guardado. Actualiza la tabla para verlo reflejado.")
+                st.success("Reporte guardado.")
+                st.experimental_rerun()
 
     if st.button("🔄 Actualizar tabla de reportes"):
         st.experimental_rerun()
+
+    reportes_df = _coerce_reports_for_ui(load_user_updates())
 
     if reportes_df.empty:
         st.info("Aún no hay reportes. Sé el primero en registrar lo que ves.")
