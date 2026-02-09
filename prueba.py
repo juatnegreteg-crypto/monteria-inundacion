@@ -7,6 +7,7 @@ Panel en tiempo casi real con lluvia y nivel del río Sinú para Montería.
 """
 
 import os
+import sqlite3
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -29,7 +30,7 @@ RAIN_DATASET = "57sv-p2fu"  # Precipitación (IDEAM)
 # ID por defecto; puede sobreescribirse vía env RIVER_DATASET_ID o secrets.
 RIVER_DATASET = os.getenv("RIVER_DATASET_ID") or "bdmn-sqnh"
 OPENAI_MODEL = "gpt-4.1-mini"
-USER_UPDATES_FILE = Path("reportes_comunidad.csv")
+DB_PATH = Path("reportes_comunidad.db")
 
 
 def _headers() -> dict:
@@ -48,6 +49,32 @@ def _openai_headers() -> dict:
     except Exception:
         pass
     return {"Authorization": f"Bearer {key}", "Content-Type": "application/json"} if key else {}
+
+
+def _init_db() -> None:
+    """Inicializa la base de datos SQLite si no existe."""
+    conn = sqlite3.connect(str(DB_PATH))
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS reportes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            barrio TEXT NOT NULL,
+            barrio_canon TEXT NOT NULL,
+            alerta TEXT NOT NULL,
+            descripcion TEXT,
+            telefono TEXT
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+
+def _get_db_connection():
+    """Retorna una conexión a la base de datos SQLite."""
+    conn = sqlite3.connect(str(DB_PATH))
+    conn.row_factory = sqlite3.Row
+    return conn
 
 
 def _fill_coords(df: pd.DataFrame) -> pd.DataFrame:
@@ -173,60 +200,59 @@ def _canonical_barrio(texto: str) -> str:
 
 
 def load_user_updates() -> pd.DataFrame:
-    cols = ["fecha", "barrio", "barrio_canon", "alerta", "descripcion", "telefono"]
-    if USER_UPDATES_FILE.exists():
-        df = pd.read_csv(
-            USER_UPDATES_FILE,
-            parse_dates=["fecha"],
-            dtype={
-                "barrio": "string",
-                "barrio_canon": "string",
-                "alerta": "string",
-                "descripcion": "string",
-                "telefono": "string",
-            },
-            encoding="utf-8",
-        )
-
-        # Asegura columnas esperadas aunque el CSV sea antiguo y fuerza tipos editables.
-        for c in cols:
-            if c not in df.columns:
-                df[c] = pd.Series([""] * len(df), dtype="string")
-
-        for c in ["barrio", "barrio_canon", "alerta", "descripcion", "telefono"]:
-            df[c] = df[c].astype("string").fillna("")
-
-        # Rellenar canon si falta
-        canon_vacio = df["barrio_canon"].str.strip().fillna("") == ""
-        df.loc[canon_vacio, "barrio_canon"] = df.loc[canon_vacio, "barrio"].fillna("").apply(_canonical_barrio)
-
-        df = df[cols]
-        return df.sort_values("fecha", ascending=False)
-
-    return pd.DataFrame(
-        {
+    _init_db()
+    conn = _get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute("""
+            SELECT fecha, barrio, barrio_canon, alerta, descripcion, telefono
+            FROM reportes
+            ORDER BY fecha DESC
+        """)
+        rows = cursor.fetchall()
+    finally:
+        conn.close()
+    
+    if not rows:
+        return pd.DataFrame({
             "fecha": pd.Series(dtype="datetime64[ns]"),
             "barrio": pd.Series(dtype="string"),
             "barrio_canon": pd.Series(dtype="string"),
             "alerta": pd.Series(dtype="string"),
             "descripcion": pd.Series(dtype="string"),
             "telefono": pd.Series(dtype="string"),
-        }
-    )
+        })
+    
+    df = pd.DataFrame(rows, columns=["fecha", "barrio", "barrio_canon", "alerta", "descripcion", "telefono"])
+    df["fecha"] = pd.to_datetime(df["fecha"], errors="coerce")
+    
+    for col in ["barrio", "barrio_canon", "alerta", "descripcion", "telefono"]:
+        df[col] = df[col].astype("string").fillna("")
+    
+    return df
 
 
 def append_user_update(barrio: str, alerta: str, descripcion: str, telefono: str) -> None:
-    new_row = {
-        "fecha": datetime.now(),
-        "barrio": barrio.strip() or "(sin barrio)",
-        "barrio_canon": _canonical_barrio(barrio),
-        "alerta": alerta.strip() or "(sin alerta)",
-        "descripcion": descripcion.strip(),
-        "telefono": telefono.strip(),
-    }
-    df = load_user_updates()
-    df = pd.concat([pd.DataFrame([new_row]), df], ignore_index=True)
-    df.to_csv(USER_UPDATES_FILE, index=False, encoding="utf-8")
+    _init_db()
+    conn = _get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute("""
+            INSERT INTO reportes (fecha, barrio, barrio_canon, alerta, descripcion, telefono)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (
+            datetime.now(),
+            barrio.strip() or "(sin barrio)",
+            _canonical_barrio(barrio),
+            alerta.strip() or "(sin alerta)",
+            descripcion.strip(),
+            telefono.strip(),
+        ))
+        conn.commit()
+    finally:
+        conn.close()
 
 
 def _summarize_reports(reportes_df: pd.DataFrame) -> str:
@@ -452,6 +478,7 @@ with tab_reportes:
         )
 
 st.caption(
-    "Fuente: datos.gov.co (IDEAM). Si tienes un token de Socrata, colócalo en st.secrets['socrata_app_token'] o "
+    "Fuente: datos.gov.co (IDEAM). Los reportes se guardan en una base de datos local (SQLite). "
+    "Si tienes un token de Socrata, colócalo en st.secrets['socrata_app_token'] o "
     "como variable de entorno SOCRATA_APP_TOKEN para más rapidez y cuota."
 )
