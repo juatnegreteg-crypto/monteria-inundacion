@@ -290,6 +290,14 @@ def _coerce_reports_for_ui(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
+def _rerun() -> None:
+    # Compatibilidad entre versiones de Streamlit (st.rerun vs st.experimental_rerun)
+    if hasattr(st, "rerun"):
+        st.rerun()
+    elif hasattr(st, "experimental_rerun"):
+        st.experimental_rerun()
+
+
 # ===== UI =====
 st_autorefresh(interval=REFRESH_MIN * 60 * 1000, key="auto_refresh")
 
@@ -409,10 +417,10 @@ with tab_reportes:
             else:
                 append_user_update(barrio, alerta, descripcion, telefono)
                 st.success("Reporte guardado.")
-                st.experimental_rerun()
+                _rerun()
 
     if st.button("🔄 Actualizar tabla de reportes"):
-        st.experimental_rerun()
+        _rerun()
 
     reportes_df = _coerce_reports_for_ui(load_user_updates())
 
