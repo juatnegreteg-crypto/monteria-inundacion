@@ -16,6 +16,13 @@ import requests
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
 
+try:
+    import psycopg2
+    from psycopg2.extras import RealDictCursor
+except Exception:
+    psycopg2 = None
+    RealDictCursor = None
+
 st.set_page_config(
     page_title="Riesgo de Inundación - Montería",
     page_icon="🌧️",
@@ -31,6 +38,11 @@ RAIN_DATASET = "57sv-p2fu"  # Precipitación (IDEAM)
 RIVER_DATASET = os.getenv("RIVER_DATASET_ID") or "bdmn-sqnh"
 OPENAI_MODEL = "gpt-4.1-mini"
 DB_PATH = Path("reportes_comunidad.db")
+DB_URL = os.getenv("DATABASE_URL")
+
+
+def _using_postgres() -> bool:
+    return bool(DB_URL) and psycopg2 is not None and RealDictCursor is not None
 
 
 def _headers() -> dict:
@@ -51,27 +63,55 @@ def _openai_headers() -> dict:
     return {"Authorization": f"Bearer {key}", "Content-Type": "application/json"} if key else {}
 
 
+@st.cache_resource(show_spinner=False)
 def _init_db() -> None:
-    """Inicializa la base de datos SQLite si no existe."""
+    """Inicializa el storage de reportes (Postgres si hay DATABASE_URL, si no SQLite)."""
+    if _using_postgres():
+        sslmode = os.getenv("PGSSLMODE") or ("require" if (os.getenv("RENDER") or os.getenv("RENDER_SERVICE_ID")) else "prefer")
+        with psycopg2.connect(DB_URL, cursor_factory=RealDictCursor, sslmode=sslmode) as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS reportes (
+                        id SERIAL PRIMARY KEY,
+                        fecha TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                        barrio TEXT NOT NULL,
+                        barrio_canon TEXT NOT NULL,
+                        alerta TEXT NOT NULL,
+                        descripcion TEXT,
+                        telefono TEXT
+                    );
+                    """
+                )
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_reportes_fecha ON reportes (fecha DESC);")
+        return
+
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS reportes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            barrio TEXT NOT NULL,
-            barrio_canon TEXT NOT NULL,
-            alerta TEXT NOT NULL,
-            descripcion TEXT,
-            telefono TEXT
-        )
-    """)
+    cursor.execute(
+        """
+            CREATE TABLE IF NOT EXISTS reportes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                barrio TEXT NOT NULL,
+                barrio_canon TEXT NOT NULL,
+                alerta TEXT NOT NULL,
+                descripcion TEXT,
+                telefono TEXT
+            )
+        """
+    )
     conn.commit()
     conn.close()
 
 
 def _get_db_connection():
-    """Retorna una conexión a la base de datos SQLite."""
+    """Retorna una conexión a Postgres (si hay DATABASE_URL) o a SQLite."""
+    if _using_postgres():
+        sslmode = os.getenv("PGSSLMODE") or ("require" if (os.getenv("RENDER") or os.getenv("RENDER_SERVICE_ID")) else "prefer")
+        conn = psycopg2.connect(DB_URL, cursor_factory=RealDictCursor, sslmode=sslmode)
+        return conn
+
     conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row
     return conn
@@ -202,55 +242,91 @@ def _canonical_barrio(texto: str) -> str:
 def load_user_updates() -> pd.DataFrame:
     _init_db()
     conn = _get_db_connection()
-    cursor = conn.cursor()
-    
     try:
-        cursor.execute("""
-            SELECT fecha, barrio, barrio_canon, alerta, descripcion, telefono
-            FROM reportes
-            ORDER BY fecha DESC
-        """)
-        rows = cursor.fetchall()
+        if _using_postgres():
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT fecha, barrio, barrio_canon, alerta, descripcion, telefono
+                    FROM reportes
+                    ORDER BY fecha DESC
+                    """
+                )
+                rows = cursor.fetchall()
+        else:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT fecha, barrio, barrio_canon, alerta, descripcion, telefono
+                FROM reportes
+                ORDER BY fecha DESC
+                """
+            )
+            rows = cursor.fetchall()
     finally:
         conn.close()
-    
+
     if not rows:
-        return pd.DataFrame({
-            "fecha": pd.Series(dtype="datetime64[ns]"),
-            "barrio": pd.Series(dtype="string"),
-            "barrio_canon": pd.Series(dtype="string"),
-            "alerta": pd.Series(dtype="string"),
-            "descripcion": pd.Series(dtype="string"),
-            "telefono": pd.Series(dtype="string"),
-        })
-    
-    df = pd.DataFrame(rows, columns=["fecha", "barrio", "barrio_canon", "alerta", "descripcion", "telefono"])
+        return pd.DataFrame(
+            {
+                "fecha": pd.Series(dtype="datetime64[ns]"),
+                "barrio": pd.Series(dtype="string"),
+                "barrio_canon": pd.Series(dtype="string"),
+                "alerta": pd.Series(dtype="string"),
+                "descripcion": pd.Series(dtype="string"),
+                "telefono": pd.Series(dtype="string"),
+            }
+        )
+
+    if _using_postgres():
+        df = pd.DataFrame(rows)
+    else:
+        df = pd.DataFrame(rows, columns=["fecha", "barrio", "barrio_canon", "alerta", "descripcion", "telefono"])
+
     df["fecha"] = pd.to_datetime(df["fecha"], errors="coerce")
-    
     for col in ["barrio", "barrio_canon", "alerta", "descripcion", "telefono"]:
         df[col] = df[col].astype("string").fillna("")
-    
     return df
 
 
 def append_user_update(barrio: str, alerta: str, descripcion: str, telefono: str) -> None:
     _init_db()
     conn = _get_db_connection()
-    cursor = conn.cursor()
-    
     try:
-        cursor.execute("""
-            INSERT INTO reportes (fecha, barrio, barrio_canon, alerta, descripcion, telefono)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, (
-            datetime.now(),
-            barrio.strip() or "(sin barrio)",
-            _canonical_barrio(barrio),
-            alerta.strip() or "(sin alerta)",
-            descripcion.strip(),
-            telefono.strip(),
-        ))
-        conn.commit()
+        if _using_postgres():
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    """
+                    INSERT INTO reportes (fecha, barrio, barrio_canon, alerta, descripcion, telefono)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    """,
+                    (
+                        datetime.now(timezone.utc),
+                        barrio.strip() or "(sin barrio)",
+                        _canonical_barrio(barrio),
+                        alerta.strip() or "(sin alerta)",
+                        descripcion.strip(),
+                        telefono.strip(),
+                    ),
+                )
+                conn.commit()
+        else:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                INSERT INTO reportes (fecha, barrio, barrio_canon, alerta, descripcion, telefono)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    datetime.now(),
+                    barrio.strip() or "(sin barrio)",
+                    _canonical_barrio(barrio),
+                    alerta.strip() or "(sin alerta)",
+                    descripcion.strip(),
+                    telefono.strip(),
+                ),
+            )
+            conn.commit()
     finally:
         conn.close()
 
