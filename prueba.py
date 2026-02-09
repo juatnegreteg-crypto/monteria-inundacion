@@ -175,15 +175,44 @@ def _canonical_barrio(texto: str) -> str:
 def load_user_updates() -> pd.DataFrame:
     cols = ["fecha", "barrio", "barrio_canon", "alerta", "descripcion", "telefono"]
     if USER_UPDATES_FILE.exists():
-        df = pd.read_csv(USER_UPDATES_FILE, parse_dates=["fecha"], encoding="utf-8")
+        df = pd.read_csv(
+            USER_UPDATES_FILE,
+            parse_dates=["fecha"],
+            dtype={
+                "barrio": "string",
+                "barrio_canon": "string",
+                "alerta": "string",
+                "descripcion": "string",
+                "telefono": "string",
+            },
+            encoding="utf-8",
+        )
+
+        # Asegura columnas esperadas aunque el CSV sea antiguo y fuerza tipos editables.
         for c in cols:
             if c not in df.columns:
-                df[c] = ""
+                df[c] = pd.Series([""] * len(df), dtype="string")
+
+        for c in ["barrio", "barrio_canon", "alerta", "descripcion", "telefono"]:
+            df[c] = df[c].astype("string").fillna("")
+
         # Rellenar canon si falta
-        df["barrio_canon"] = df["barrio_canon"].where(df["barrio_canon"].notna() & (df["barrio_canon"] != ""), df["barrio"].apply(_canonical_barrio))
+        canon_vacio = df["barrio_canon"].str.strip().fillna("") == ""
+        df.loc[canon_vacio, "barrio_canon"] = df.loc[canon_vacio, "barrio"].fillna("").apply(_canonical_barrio)
+
         df = df[cols]
         return df.sort_values("fecha", ascending=False)
-    return pd.DataFrame(columns=cols)
+
+    return pd.DataFrame(
+        {
+            "fecha": pd.Series(dtype="datetime64[ns]"),
+            "barrio": pd.Series(dtype="string"),
+            "barrio_canon": pd.Series(dtype="string"),
+            "alerta": pd.Series(dtype="string"),
+            "descripcion": pd.Series(dtype="string"),
+            "telefono": pd.Series(dtype="string"),
+        }
+    )
 
 
 def append_user_update(barrio: str, alerta: str, descripcion: str, telefono: str) -> None:
