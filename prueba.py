@@ -474,7 +474,7 @@ def generate_ai_brief(lluvia_df: pd.DataFrame, river_df: pd.DataFrame, reportes_
         "Da 3-5 recomendaciones accionables para las personas (no autoridades), con viñetas breves. "
         "Incluye datos recientes cuando existan.\n\n"
         f"Lluvia acumulada 24h: {lluvia_24h:.1f} mm.\n"
-        f"Nivel río Sinú último: {river_last} cm a las {river_time}.\n"
+        f"Nivel río Sinú último: {river_last} mt a las {river_time}.\n"
         "Umbrales: lluvia>=60 mm vigilar, >=100 mm riesgo alto; nivel río >=600 alerta amarilla, >=700 posible desbordamiento.\n\n"
         f"{reportes_resumen}"
     )
@@ -563,7 +563,7 @@ with tab_lluvia:
         st.dataframe(tabla_lluvia, use_container_width=True, height=320)
 
 with tab_rio:
-    st.subheader("🌊 Nivel del río Sinú (cm)")
+    st.subheader("🌊 Nivel del río Sinú (mt)")
     if nivel_df.empty:
         st.info("No hay lecturas recientes del nivel del río en el rango seleccionado.")
     else:
