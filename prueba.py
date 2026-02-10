@@ -282,7 +282,7 @@ def load_user_updates() -> pd.DataFrame:
     if not rows:
         return pd.DataFrame(
             {
-                "fecha": pd.Series(dtype="datetime64[ns]"),
+                "fecha": pd.Series(dtype="datetime64[ns, America/Bogota]"),
                 "barrio": pd.Series(dtype="string"),
                 "barrio_canon": pd.Series(dtype="string"),
                 "alerta": pd.Series(dtype="string"),
@@ -296,7 +296,7 @@ def load_user_updates() -> pd.DataFrame:
     else:
         df = pd.DataFrame(rows, columns=["fecha", "barrio", "barrio_canon", "alerta", "descripcion", "telefono"])
 
-    df["fecha"] = pd.to_datetime(df["fecha"], errors="coerce")
+    df["fecha"] = pd.to_datetime(df["fecha"], errors="coerce", utc=True).dt.tz_convert("America/Bogota")
     for col in ["barrio", "barrio_canon", "alerta", "descripcion", "telefono"]:
         df[col] = df[col].astype("string").fillna("")
     return df
@@ -331,7 +331,7 @@ def append_user_update(barrio: str, alerta: str, descripcion: str, telefono: str
                 VALUES (?, ?, ?, ?, ?, ?)
                 """,
                 (
-                    datetime.now(),
+                    datetime.now(timezone.utc),
                     barrio.strip() or "(sin barrio)",
                     _canonical_barrio(barrio),
                     alerta.strip() or "(sin alerta)",
