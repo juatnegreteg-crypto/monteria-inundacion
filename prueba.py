@@ -29,58 +29,174 @@ st.set_page_config(
     layout="wide",
 )
 
+# 🎨 COLORES UNIVERSIDAD DEL SINÚ (ROJO Y BLANCO)
 st.markdown(
     """
     <style>
     :root {
-        --sinu-red: #b00020;
-        --sinu-white: #ffffff;
-        --sinu-light: #f8f8f8;
+        --sinu-red: #C8102E;
+        --sinu-red-dark: #A00D24;
+        --sinu-red-light: #FFE5E5;
+        --sinu-white: #FFFFFF;
+        --sinu-gray-light: #F5F5F5;
+        --sinu-gray: #E0E0E0;
+        --sinu-text-dark: #2C2C2C;
     }
+    
+    /* Fondo general */
     .stApp {
         background: var(--sinu-white);
-        color: #111111;
+        color: var(--sinu-text-dark);
     }
+    
+    /* Header y toolbar */
     [data-testid="stHeader"], [data-testid="stToolbar"] {
         background: var(--sinu-white);
-    }
-    .block-container {
-        padding-top: 2rem;
-    }
-    h1, h2, h3, h4, h5, h6, .stMarkdown, .stCaption {
-        color: #111111;
-    }
-    .stTabs [data-baseweb="tab-list"] {
         border-bottom: 2px solid var(--sinu-red);
     }
-    .stTabs [data-baseweb="tab"] {
-        color: #111111;
+    
+    /* Contenedor principal */
+    .block-container {
+        padding-top: 2rem;
+        background: var(--sinu-white);
     }
-    .stTabs [aria-selected="true"] {
-        color: var(--sinu-red);
+    
+    /* Títulos y textos */
+    h1, h2, h3, h4, h5, h6 {
+        color: var(--sinu-red) !important;
+        font-weight: 700 !important;
+    }
+    
+    .stMarkdown, .stCaption, p, li, span {
+        color: var(--sinu-text-dark);
+    }
+    
+    /* Tabs (pestañas) */
+    .stTabs [data-baseweb="tab-list"] {
+        background: var(--sinu-gray-light);
         border-bottom: 3px solid var(--sinu-red);
+        gap: 8px;
     }
+    
+    .stTabs [data-baseweb="tab"] {
+        color: var(--sinu-text-dark);
+        background: var(--sinu-white);
+        border: 1px solid var(--sinu-gray);
+        border-radius: 8px 8px 0 0;
+        padding: 12px 24px;
+        font-weight: 600;
+    }
+    
+    .stTabs [data-baseweb="tab"]:hover {
+        background: var(--sinu-red-light);
+        color: var(--sinu-red);
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background: var(--sinu-red) !important;
+        color: var(--sinu-white) !important;
+        border-bottom: none !important;
+    }
+    
+    /* Botones */
     .stButton button, .stDownloadButton button, .stFormSubmitButton button {
-        background: var(--sinu-red);
-        color: var(--sinu-white);
-        border: 1px solid var(--sinu-red);
-        border-radius: 6px;
+        background: var(--sinu-red) !important;
+        color: var(--sinu-white) !important;
+        border: 2px solid var(--sinu-red) !important;
+        border-radius: 8px;
+        font-weight: 600;
+        padding: 0.5rem 2rem;
+        transition: all 0.3s ease;
     }
+    
     .stButton button:hover, .stDownloadButton button:hover, .stFormSubmitButton button:hover {
-        background: #8f001a;
-        border-color: #8f001a;
+        background: var(--sinu-red-dark) !important;
+        border-color: var(--sinu-red-dark) !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(200, 16, 46, 0.3);
     }
+    
+    /* Métricas */
     .stMetric {
-        background: var(--sinu-light);
+        background: var(--sinu-gray-light);
         border-left: 6px solid var(--sinu-red);
-        padding: 0.75rem 1rem;
-        border-radius: 6px;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
+    
+    .stMetric label {
+        color: var(--sinu-red) !important;
+        font-weight: 600 !important;
+    }
+    
+    .stMetric [data-testid="stMetricValue"] {
+        color: var(--sinu-text-dark) !important;
+    }
+    
+    /* Alertas */
     .stAlert {
         border-left: 6px solid var(--sinu-red);
+        background: var(--sinu-red-light);
+        border-radius: 8px;
     }
+    
+    /* Success, Warning, Error, Info */
+    div[data-baseweb="notification"] {
+        border-radius: 8px;
+        border-left-width: 6px;
+    }
+    
+    /* Tablas y dataframes */
     .stDataFrame, .stDataEditor {
         background: var(--sinu-white);
+        border: 1px solid var(--sinu-gray);
+        border-radius: 8px;
+    }
+    
+    .stDataFrame thead tr th {
+        background: var(--sinu-red) !important;
+        color: var(--sinu-white) !important;
+        font-weight: 600;
+    }
+    
+    /* Inputs y formularios */
+    .stTextInput input, .stTextArea textarea, .stSelectbox select {
+        border: 2px solid var(--sinu-gray);
+        border-radius: 6px;
+        color: var(--sinu-text-dark);
+    }
+    
+    .stTextInput input:focus, .stTextArea textarea:focus, .stSelectbox select:focus {
+        border-color: var(--sinu-red);
+        box-shadow: 0 0 0 2px var(--sinu-red-light);
+    }
+    
+    /* Expander */
+    .streamlit-expanderHeader {
+        background: var(--sinu-gray-light);
+        border: 1px solid var(--sinu-gray);
+        border-radius: 8px;
+        color: var(--sinu-red) !important;
+        font-weight: 600;
+    }
+    
+    .streamlit-expanderHeader:hover {
+        background: var(--sinu-red-light);
+    }
+    
+    /* Gráficos */
+    .stLineChart, .stBarChart {
+        border: 1px solid var(--sinu-gray);
+        border-radius: 8px;
+        padding: 1rem;
+        background: var(--sinu-white);
+    }
+    
+    /* Sidebar (si lo usas) */
+    [data-testid="stSidebar"] {
+        background: var(--sinu-gray-light);
+        border-right: 3px solid var(--sinu-red);
     }
     </style>
     """,
@@ -92,11 +208,13 @@ st.title("🌧️ Riesgo de Inundación – Montería")
 CIUDAD = "MONTERÍA"
 REFRESH_MIN = 5  # minutos
 RAIN_DATASET = "57sv-p2fu"  # Precipitación (IDEAM)
-# ID por defecto; puede sobreescribirse vía env RIVER_DATASET_ID o secrets.
 RIVER_DATASET = os.getenv("RIVER_DATASET_ID") or "bdmn-sqnh"
-OPENAI_MODEL = "gpt-4.1-mini"
+OPENAI_MODEL = "gpt-4o-mini"
 DB_PATH = Path("reportes_comunidad.db")
 DB_URL = os.getenv("DATABASE_URL")
+
+# 🕐 TIMEZONE DE BOGOTÁ (UTC-5)
+TZ_BOGOTA = timezone(timedelta(hours=-5))
 
 
 def _using_postgres() -> bool:
@@ -208,22 +326,30 @@ def _fill_coords(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _to_datetime(series, field_name):
+    """Convierte series a datetime con timezone de Bogotá (UTC-5)."""
     dt = pd.to_datetime(series, errors="coerce")
-    # Si viene tz-aware, convertimos; si viene naive, asumimos hora local de Bogota.
+    
+    # Si viene con timezone, convertimos a Bogotá
     if getattr(dt.dt, "tz", None) is not None:
-        dt = dt.dt.tz_convert("America/Bogota")
+        dt = dt.dt.tz_convert(TZ_BOGOTA)
     else:
-        dt = dt.dt.tz_localize("America/Bogota")
+        # Si viene sin timezone, asumimos que ya está en hora de Bogotá
+        dt = dt.dt.tz_localize(TZ_BOGOTA)
+    
     return dt.rename(field_name)
 
 
 def _as_bogota(series):
-    """Convierte una serie a zona horaria de Bogota y deja tz-naive para UI."""
-    return (
-        pd.to_datetime(series, errors="coerce", utc=True)
-        .dt.tz_convert("America/Bogota")
-        .dt.tz_localize(None)
-    )
+    """Convierte una serie a zona horaria de Bogotá (UTC-5) y deja tz-naive para UI."""
+    dt = pd.to_datetime(series, errors="coerce")
+    
+    # Si viene con timezone info
+    if getattr(dt.dt, "tz", None) is not None:
+        # Convertir a Bogotá y quitar timezone info
+        return dt.dt.tz_convert(TZ_BOGOTA).dt.tz_localize(None)
+    else:
+        # Si viene sin timezone, asumir que viene en UTC y convertir a Bogotá
+        return dt.dt.tz_localize(timezone.utc).dt.tz_convert(TZ_BOGOTA).dt.tz_localize(None)
 
 
 def _pick_column(df, candidates):
@@ -256,7 +382,10 @@ def load_lluvia(hours_back: int = 72) -> pd.DataFrame:
     df["lon"] = pd.to_numeric(df[_pick_column(df, ["longitud", "longitudestacion", "lon", "longitude"])], errors="coerce")
     df = _fill_coords(df).dropna(subset=["fecha", "valor_mm"])
 
-    df = df[df["fecha"] >= datetime.now(timezone.utc) - timedelta(hours=hours_back)]
+    # Filtrar por tiempo (comparar en hora de Bogotá)
+    ahora_bogota = datetime.now(TZ_BOGOTA)
+    df = df[df["fecha"] >= ahora_bogota - timedelta(hours=hours_back)]
+    
     mun_col = _pick_column(df, ["municipio", "nom_municipio"])
     if mun_col:
         df = df[df[mun_col].str.upper().str.startswith(CIUDAD[:6], na=False)]
@@ -290,17 +419,17 @@ def load_nivel(days_back: int = 7) -> pd.DataFrame:
 
     nivel_col = _pick_column(df, ["nivel", "valor", "valorobservado", "nivel_cm"])
 
-# convertir a número
+    # convertir a número
     df["nivel_cm"] = pd.to_numeric(df[nivel_col], errors="coerce")
 
-# 👇 CONVERSIÓN SEGÚN UNIDAD
+    # 👇 CONVERSIÓN SEGÚN UNIDAD
     if "unidadmedida" in df.columns:
         df["unidadmedida"] = df["unidadmedida"].str.lower()
 
-    # metros → cm
+        # metros → cm
         df.loc[df["unidadmedida"] == "m", "nivel_cm"] *= 100
 
-    # milímetros → cm (por si acaso)
+        # milímetros → cm (por si acaso)
         df.loc[df["unidadmedida"] == "mm", "nivel_cm"] /= 10
 
     df["fecha"] = _to_datetime(df[_pick_column(df, ["fecha", "fechaobservacion", "fecha_observacion"])], "fecha")
@@ -313,7 +442,9 @@ def load_nivel(days_back: int = 7) -> pd.DataFrame:
     if mun_col:
         df = df[df[mun_col].str.upper().str.startswith("MONTER", na=False)]
 
-    df = df[df["fecha"] >= datetime.now(timezone.utc) - timedelta(days=days_back)]
+    # Filtrar por tiempo (comparar en hora de Bogotá)
+    ahora_bogota = datetime.now(TZ_BOGOTA)
+    df = df[df["fecha"] >= ahora_bogota - timedelta(days=days_back)]
     return df
 
 
@@ -355,7 +486,7 @@ def load_user_updates() -> pd.DataFrame:
     if not rows:
         return pd.DataFrame(
             {
-                "fecha": pd.Series(dtype="datetime64[ns, America/Bogota]"),
+                "fecha": pd.Series(dtype="datetime64[ns]"),
                 "barrio": pd.Series(dtype="string"),
                 "barrio_canon": pd.Series(dtype="string"),
                 "alerta": pd.Series(dtype="string"),
@@ -378,6 +509,10 @@ def load_user_updates() -> pd.DataFrame:
 def append_user_update(barrio: str, alerta: str, descripcion: str, telefono: str) -> None:
     _init_db()
     conn = _get_db_connection()
+    
+    # 🕐 Obtener hora actual en Bogotá
+    ahora_bogota = datetime.now(TZ_BOGOTA)
+    
     try:
         if _using_postgres():
             with conn.cursor() as cursor:
@@ -387,7 +522,7 @@ def append_user_update(barrio: str, alerta: str, descripcion: str, telefono: str
                     VALUES (%s, %s, %s, %s, %s, %s)
                     """,
                     (
-                        datetime.now(timezone.utc),
+                        ahora_bogota,
                         barrio.strip() or "(sin barrio)",
                         _canonical_barrio(barrio),
                         alerta.strip() or "(sin alerta)",
@@ -398,13 +533,14 @@ def append_user_update(barrio: str, alerta: str, descripcion: str, telefono: str
                 conn.commit()
         else:
             cursor = conn.cursor()
+            # Para SQLite, guardamos como string ISO en hora de Bogotá
             cursor.execute(
                 """
                 INSERT INTO reportes (fecha, barrio, barrio_canon, alerta, descripcion, telefono)
                 VALUES (?, ?, ?, ?, ?, ?)
                 """,
                 (
-                    datetime.now(timezone.utc),
+                    ahora_bogota.isoformat(),
                     barrio.strip() or "(sin barrio)",
                     _canonical_barrio(barrio),
                     alerta.strip() or "(sin alerta)",
@@ -518,14 +654,14 @@ else:
 
 # Pestañas principales
 tab_lluvia, tab_rio, tab_alertas, tab_reportes = st.tabs([
-    "Lluvia por estación",
-    "Nivel del río",
-    "Alertas y recomendaciones",
-    "Reportes ciudadanos (en vivo)",
+    "🌧️ Lluvia por estación",
+    "🌊 Nivel del río",
+    "🚨 Alertas y recomendaciones",
+    "📢 Reportes ciudadanos",
 ])
 
 with tab_lluvia:
-    st.subheader("🌧️ Lluvia reciente (mm)")
+    st.subheader("Lluvia reciente (mm)")
     if lluvia_df.empty:
         st.info("Sin datos de lluvia en el rango seleccionado.")
     else:
@@ -536,7 +672,7 @@ with tab_lluvia:
         st.dataframe(tabla_lluvia, use_container_width=True, height=320)
 
 with tab_rio:
-    st.subheader("🌊 Nivel del río Sinú (cm)")
+    st.subheader("Nivel del río Sinú (cm)")
     if nivel_df.empty:
         st.info("No hay lecturas recientes del nivel del río en el rango seleccionado.")
     else:
@@ -547,26 +683,26 @@ with tab_rio:
         st.dataframe(tabla_rio, use_container_width=True, height=320)
 
 with tab_alertas:
-    st.subheader("🚨 Alertas automáticas")
+    st.subheader("Alertas automáticas")
     if lluvia_df.empty and nivel_df.empty:
         st.info("Sin datos para calcular alertas.")
     else:
         if lluvia_24h >= 100:
-            st.error(f"Acumulado 24 h: {lluvia_24h:.1f} mm (riesgo alto de encharcamiento)")
+            st.error(f"⚠️ Acumulado 24 h: {lluvia_24h:.1f} mm (riesgo alto de encharcamiento)")
         elif lluvia_24h >= 60:
-            st.warning(f"Acumulado 24 h: {lluvia_24h:.1f} mm (vigilar drenajes)")
+            st.warning(f"⚠️ Acumulado 24 h: {lluvia_24h:.1f} mm (vigilar drenajes)")
         else:
-            st.success(f"Acumulado 24 h: {lluvia_24h:.1f} mm")
+            st.success(f"✅ Acumulado 24 h: {lluvia_24h:.1f} mm")
 
         river_last = nivel_df.iloc[0]["nivel_cm"] if not nivel_df.empty else None
         if river_last is None:
             st.info("Sin dato de nivel para el río.")
         elif river_last >= 700:
-            st.error(f"Nivel río Sinú: {river_last:.0f} cm (posible desbordamiento local)")
+            st.error(f"⚠️ Nivel río Sinú: {river_last:.0f} cm (posible desbordamiento local)")
         elif river_last >= 600:
-            st.warning(f"Nivel río Sinú: {river_last:.0f} cm (alerta amarilla)")
+            st.warning(f"⚠️ Nivel río Sinú: {river_last:.0f} cm (alerta amarilla)")
         else:
-            st.success(f"Nivel río Sinú: {river_last:.0f} cm")
+            st.success(f"✅ Nivel río Sinú: {river_last:.0f} cm")
 
         with st.expander("🤖 IA: recomendaciones y contexto", expanded=True):
             advice = generate_ai_brief(lluvia_df, nivel_df, reportes_df)
@@ -581,30 +717,30 @@ with tab_alertas:
                     st.dataframe(nivel_df.tail(5))
 
 with tab_reportes:
-    st.subheader("📢 Reportes ciudadanos en tiempo real")
-    st.caption("Úsalo como tablero colaborativo. Lo que escribas queda en un CSV local y aparece al instante para otros usuarios que refresquen.")
+    st.subheader("Reportes ciudadanos en tiempo real")
+    st.caption("Úsalo como tablero colaborativo. Lo que escribas queda guardado y aparece al instante para otros usuarios.")
 
     with st.form("form_reporte", clear_on_submit=True):
         col1, col2 = st.columns(2)
-        barrio = col1.text_input("Barrio / vereda", placeholder="Ej: La Granja")
-        alerta = col2.selectbox(
+        barrio_input = col1.text_input("Barrio / vereda", placeholder="Ej: La Granja")
+        alerta_input = col2.selectbox(
             "Tipo de alerta",
             ["Lluvia", "Inundación", "Aumento del río", "Otro"],
             index=0,
         )
-        descripcion = st.text_area(
+        descripcion_input = st.text_area(
             "Breve descripción (opcional)",
             help="Ej: calle anegada, casa afectada, nivel del río subiendo, etc.",
             placeholder="Escribe 1-3 frases cortas (si quieres)",
         )
-        telefono = st.text_input("Teléfono de contacto (opcional)")
-        enviado = st.form_submit_button("Publicar reporte")
+        telefono_input = st.text_input("Teléfono de contacto (opcional)")
+        enviado = st.form_submit_button("📤 Publicar reporte")
         if enviado:
-            if not barrio.strip():
-                st.warning("Indica el barrio/vereda.")
+            if not barrio_input.strip():
+                st.warning("⚠️ Por favor indica el barrio/vereda.")
             else:
-                append_user_update(barrio, alerta, descripcion, telefono)
-                st.success("Reporte guardado.")
+                append_user_update(barrio_input, alerta_input, descripcion_input, telefono_input)
+                st.success("✅ Reporte guardado exitosamente.")
                 _rerun()
 
     if st.button("🔄 Actualizar tabla de reportes"):
@@ -613,7 +749,7 @@ with tab_reportes:
     reportes_df = _coerce_reports_for_ui(load_user_updates())
 
     if reportes_df.empty:
-        st.info("Aún no hay reportes. Sé el primero en registrar lo que ves.")
+        st.info("ℹ️ Aún no hay reportes. Sé el primero en registrar lo que ves.")
     else:
         st.subheader("Gráficas rápidas")
         c1, c2 = st.columns(2)
@@ -640,7 +776,7 @@ with tab_reportes:
         )
 
 st.caption(
-    "Fuente: datos.gov.co (IDEAM). Los reportes se guardan en una base de datos local (SQLite). "
-    "Si tienes un token de Socrata, colócalo en st.secrets['socrata_app_token'] o "
-    "como variable de entorno SOCRATA_APP_TOKEN para más rapidez y cuota."
+    "🌧️🌊 Panel de monitoreo de riesgo de inundación para Montería. "
+    "Fuente: datos.gov.co (IDEAM). Los reportes se guardan en base de datos. "
+    "Si tienes un token de Socrata, colócalo en st.secrets['socrata_app_token'] para más rapidez."
 )
