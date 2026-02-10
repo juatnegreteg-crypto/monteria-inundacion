@@ -29,6 +29,64 @@ st.set_page_config(
     layout="wide",
 )
 
+st.markdown(
+    """
+    <style>
+    :root {
+        --sinu-red: #b00020;
+        --sinu-white: #ffffff;
+        --sinu-light: #f8f8f8;
+    }
+    .stApp {
+        background: var(--sinu-white);
+        color: #111111;
+    }
+    [data-testid="stHeader"], [data-testid="stToolbar"] {
+        background: var(--sinu-white);
+    }
+    .block-container {
+        padding-top: 2rem;
+    }
+    h1, h2, h3, h4, h5, h6, .stMarkdown, .stCaption {
+        color: #111111;
+    }
+    .stTabs [data-baseweb="tab-list"] {
+        border-bottom: 2px solid var(--sinu-red);
+    }
+    .stTabs [data-baseweb="tab"] {
+        color: #111111;
+    }
+    .stTabs [aria-selected="true"] {
+        color: var(--sinu-red);
+        border-bottom: 3px solid var(--sinu-red);
+    }
+    .stButton button, .stDownloadButton button, .stFormSubmitButton button {
+        background: var(--sinu-red);
+        color: var(--sinu-white);
+        border: 1px solid var(--sinu-red);
+        border-radius: 6px;
+    }
+    .stButton button:hover, .stDownloadButton button:hover, .stFormSubmitButton button:hover {
+        background: #8f001a;
+        border-color: #8f001a;
+    }
+    .stMetric {
+        background: var(--sinu-light);
+        border-left: 6px solid var(--sinu-red);
+        padding: 0.75rem 1rem;
+        border-radius: 6px;
+    }
+    .stAlert {
+        border-left: 6px solid var(--sinu-red);
+    }
+    .stDataFrame, .stDataEditor {
+        background: var(--sinu-white);
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 st.title("🌧️ Riesgo de Inundación – Montería")
 
 CIUDAD = "MONTERÍA"
