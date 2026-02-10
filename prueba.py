@@ -153,6 +153,15 @@ def _to_datetime(series, field_name):
     return pd.to_datetime(series, errors="coerce", utc=True).dt.tz_convert("America/Bogota").rename(field_name)
 
 
+def _as_bogota(series):
+    """Convierte una serie a zona horaria de Bogota y deja tz-naive para UI."""
+    return (
+        pd.to_datetime(series, errors="coerce", utc=True)
+        .dt.tz_convert("America/Bogota")
+        .dt.tz_localize(None)
+    )
+
+
 def _pick_column(df, candidates):
     for c in candidates:
         if c in df.columns:
@@ -296,7 +305,7 @@ def load_user_updates() -> pd.DataFrame:
     else:
         df = pd.DataFrame(rows, columns=["fecha", "barrio", "barrio_canon", "alerta", "descripcion", "telefono"])
 
-    df["fecha"] = pd.to_datetime(df["fecha"], errors="coerce", utc=True).dt.tz_convert("America/Bogota")
+    df["fecha"] = _as_bogota(df["fecha"])
     for col in ["barrio", "barrio_canon", "alerta", "descripcion", "telefono"]:
         df[col] = df[col].astype("string").fillna("")
     return df
@@ -398,7 +407,7 @@ def _coerce_reports_for_ui(df: pd.DataFrame) -> pd.DataFrame:
     if df.empty:
         return df
     out = df.copy()
-    out["fecha"] = pd.to_datetime(out["fecha"], errors="coerce")
+    out["fecha"] = _as_bogota(out["fecha"])
     for col in ["barrio", "barrio_canon", "alerta", "descripcion", "telefono"]:
         if col in out.columns:
             out[col] = out[col].astype("string").fillna("")
