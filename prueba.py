@@ -539,7 +539,7 @@ else:
 if not nivel_df.empty:
     rio_last = nivel_df.iloc[0]
     tendencia = "⬆️" if len(nivel_df) > 1 and rio_last["nivel_cm"] > nivel_df.iloc[1]["nivel_cm"] else "⬇️"
-    col3.metric("Nivel río Sinú", f"{rio_last['nivel_cm']:.0f} cm {tendencia}", rio_last["fecha"].strftime("%d-%b %H:%M"))
+    col3.metric("Nivel río Sinú", f"{rio_last['nivel_cm']:.0f} M {tendencia}", rio_last["fecha"].strftime("%d-%b %H:%M"))
 else:
     col3.metric("Nivel río Sinú", "—")
 
