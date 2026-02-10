@@ -216,7 +216,20 @@ def load_nivel(days_back: int = 7) -> pd.DataFrame:
         return df
 
     nivel_col = _pick_column(df, ["nivel", "valor", "valorobservado", "nivel_cm"])
+
+# convertir a número
     df["nivel_cm"] = pd.to_numeric(df[nivel_col], errors="coerce")
+
+# 👇 CONVERSIÓN SEGÚN UNIDAD
+if "unidadmedida" in df.columns:
+    df["unidadmedida"] = df["unidadmedida"].str.lower()
+
+    # metros → cm
+    df.loc[df["unidadmedida"] == "m", "nivel_cm"] *= 100
+
+    # milímetros → cm (por si acaso)
+    df.loc[df["unidadmedida"] == "mm", "nivel_cm"] /= 10
+
     df["fecha"] = _to_datetime(df[_pick_column(df, ["fecha", "fechaobservacion", "fecha_observacion"])], "fecha")
     df["estacion"] = df[_pick_column(df, ["nombreestacion", "estacion", "idestacion", "codigoestacion", "nom_estacion"])].fillna("Sin nombre")
     df["lat"] = pd.to_numeric(df[_pick_column(df, ["latitud", "latitudestacion", "lat", "latitude"])], errors="coerce")
