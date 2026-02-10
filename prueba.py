@@ -208,7 +208,13 @@ def _fill_coords(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _to_datetime(series, field_name):
-    return pd.to_datetime(series, errors="coerce", utc=True).dt.tz_convert("America/Bogota").rename(field_name)
+    dt = pd.to_datetime(series, errors="coerce")
+    # Si viene tz-aware, convertimos; si viene naive, asumimos hora local de Bogota.
+    if getattr(dt.dt, "tz", None) is not None:
+        dt = dt.dt.tz_convert("America/Bogota")
+    else:
+        dt = dt.dt.tz_localize("America/Bogota")
+    return dt.rename(field_name)
 
 
 def _as_bogota(series):
