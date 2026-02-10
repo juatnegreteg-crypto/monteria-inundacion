@@ -544,7 +544,7 @@ with tab_reportes:
             num_rows="dynamic",
             key="reportes_editor",
             column_config={
-                "fecha": st.column_config.DatetimeColumn("Fecha/Hora", format="DD-MMM HH:mm"),
+                "fecha": st.column_config.DatetimeColumn("Fecha/Hora", format="DD-MMM HH:mm", width="medium"),
                 "alerta": "Alerta",
                 "barrio_canon": "Barrio/Vereda",
                 "descripcion": st.column_config.TextColumn("Descripción", width="large"),
